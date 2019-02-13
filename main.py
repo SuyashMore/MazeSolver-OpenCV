@@ -2,6 +2,18 @@ import cv2
 import numpy as np
 
 
+def extractGraph(input):
+    kernel = np.ones((3, 3), np.uint8)
+    img = imgFile.copy()
+    erosion = cv2.erode(img, kernel, iterations=2)
+
+    GRAY_img = cv2.cvtColor(erosion, cv2.COLOR_BGR2GRAY)
+
+    (thresh, BW_img) = cv2.threshold(GRAY_img, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+    return BW_img
+
+
 def BFS(graph,start,end):
     start = start[1],start[0]
     end=end[1],end[0]
@@ -32,6 +44,7 @@ def BFS(graph,start,end):
     setParent(start,(-10,-10))      #Set Start Parent to Unique Number
 
     TotalNodes = 0
+    FOUND_DESTINATION = False
     while True:
         # Ready Up List for nextFrontier
         nextFrontier = []
@@ -39,10 +52,12 @@ def BFS(graph,start,end):
 #         Visit All the Nodes in Current Frontier
         for x,y in Frontier:        #Loop Through Each Node
 #           Check the Neighbours
-            neighbours = [ (x+1,y),(x,y+1) , (x,y-1) , (x-1,y)]
-            # neighbours = [(x,y-1) , (x-1,y) , (x,y+1) , (x+1,y),(x-1,y-1),(x+1,y+1),(x-1,y+1),(x+1,y-1)]  # With Diagonal Elements
+#             neighbours = [ (x+1,y),(x,y+1) , (x,y-1) , (x-1,y)]
+            neighbours = [(x,y-1) , (x-1,y) , (x,y+1) , (x+1,y),(x-1,y-1),(x+1,y+1),(x-1,y+1),(x+1,y-1)]  # With Diagonal Elements
 
             currentLevel = levels[x][y]
+
+
             for neighbour in neighbours:                            #Check North ,SOuth ,East,West,Diagonals(if-Required)
                 tx, ty = neighbour
                 if(tx<5 or ty<5 or tx>(height-5) or ty>(width-5)):  #Check for Graph Constrains
@@ -67,9 +82,13 @@ def BFS(graph,start,end):
                     else:                                            #Found A Repeated Node,Just Skip it
                         # print("Node Already Discovered,currentLevel=",levels[tx][ty]," ,FinderLevel=",currentLevel)
                         pass
+
+                if (x == end[0] and y == end[1]):
+                    FOUND_DESTINATION = True
+                    break
         del Frontier
 
-        if (len(nextFrontier) > 0):
+        if (len(nextFrontier) > 0 and not FOUND_DESTINATION):
             Frontier = nextFrontier.copy()
             del nextFrontier
         else:
@@ -107,24 +126,14 @@ def BFS(graph,start,end):
 
 if __name__=="__main__":
     imgFile = cv2.imread("maze2.png")
-    backup = imgFile.copy()
-
+    backupImg = imgFile.copy()
 
     starting_point = (154,8)
     ending_point = (169,312)
 
+    graph =extractGraph(imgFile)
 
-    kernel=np.ones((3,3),np.uint8)
-    img = imgFile.copy()
-    erosion = cv2.erode(img,kernel,iterations = 2)
-
-
-    GRAY_img = cv2.cvtColor(erosion,cv2.COLOR_BGR2GRAY)
-
-    (thresh , BW_img) = cv2.threshold(GRAY_img,128,255,cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-
-
-    path = BFS(BW_img,starting_point,ending_point)
+    path = BFS(graph,starting_point,ending_point)
 
     for point in path:
         point = point[1],point[0]
@@ -133,8 +142,9 @@ if __name__=="__main__":
 
     cv2.circle(imgFile,ending_point,3,(255,255,0),-1)
     cv2.circle(imgFile,starting_point,3,(255,0,255),-1)
+    
     cv2.imshow("Path",imgFile)
-    cv2.imshow("Raw-Image",backup)
+    cv2.imshow("Raw-Image",backupImg)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
