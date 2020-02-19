@@ -16,7 +16,7 @@ python run.py
 ```
 
 
-### Input File Structure 
+### Input File Structure  (run.py)
 ``` python
 imgFile = cv2.imread("inputImage.png")
 starting_point = (154,8)   # Source Cordinates
