@@ -126,11 +126,11 @@ def BFS(graph,start,end):
 
 if __name__=="__main__":
     imgFile = cv2.imread("maze2.png")
-    backupImg = imgFile.copy()
-
+    
     starting_point = (154,8)
     ending_point = (169,312)
 
+    backupImg = imgFile.copy()
     graph =extractGraph(imgFile)
 
     path = BFS(graph,starting_point,ending_point)
